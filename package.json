@@ -1,0 +1,15 @@
+{
+  "name": "tunga_task_management_system",
+  "version": "1.0.0",
+  "description": "Online Task Management System",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Task",
+    "Management"
+  ],
+  "author": "Sodiq Saidi and Mulumba Huzaifa",
+  "license": "ISC"
+}
