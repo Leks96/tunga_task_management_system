@@ -1,54 +1,37 @@
-const { referrerPolicy } = require('helmet');
-const { valid } = require('joi');
-const { modal, DataTypes } = require('sequelize');
+const { DataTypes } = require("sequelize");
+const { sequelize } = require(".");
+const { defaultValueSchemable } = require("sequelize/lib/utils");
+const { allow } = require("joi");
 
 module.exports = (sequelize, DataTypes) => {
-    class Project extends modal {
-        static associate(models) {
-            Project.belongsTo(models.User, {
-                foreignKey: 'createdBy',
-                as: 'creator'
-            });
-            Project.hasMany(models.Task, {
-                foreignKey: 'projectId',
-                as: 'tasks'
-            });
-        }
-    }
-
-    Project.init({
+    const Project = sequelize.define('Project', {
         id: {
-            type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
-            primaryKey: true
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
         },
         name: {
             type: DataTypes.STRING,
             allowNull: false,
-            validate: {
-                len: [3, 100]
-            }
         },
         description: {
-            type: DataTypes.TEXT
+            type: DataTypes.TEXT,
+            allowNull: false,
         },
         status: {
-            type: DataTypes.ENUM('active', 'archive'),
-            defaultValue: 'active'
+            type: DataTypes.ENUM('active', 'completed', 'archived'),
+            defaultValue: 'active',
         },
-        createdBy: {
-            type: DataTypes.UUID,
+        ownerId: {
+            type: DataTypes.INTEGER,
             allowNull: false,
-            references: {
-                model: 'Users',
-                key: 'id'
-            }
-        }
-    }, {
-        sequelize,
-        modelName: 'Project',
-        paranoid: true
+        },
     });
 
-    return Project
+    Project.associate = (models) => {
+        Project.belongsTo(models.User, { as: 'owner', foreignKey: 'ownerId' });
+        Project.hasMany(models.Task, { as: 'tasks', foreignKey: 'projectId' });
+    };
+
+    return Project;
 }

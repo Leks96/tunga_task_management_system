@@ -1,72 +1,34 @@
-const { Modal, DataTypes } = require('sequelize');
-const { sequelize } = require('.');
+const { sequelize, DataTypes } = require("sequelize");
 
 module.exports = (sequelize, DataTypes) => {
-    class Task extends Modal {
-        static associate(models) {
-            Task.belongsTo(models.Project, {
-                foreignKey: 'assignedTo',
-                as: 'assignee'
-            });
-            Task.belongsTo(models.User, {
-                foreignKey: 'assignedTo',
-                as: 'assignee'
-            });
-            Task.belongsTo(models.User, {
-                foreignKey: 'createdBy',
-                as: 'creator'
-            });
-        }
-    }
-
-    Task.init({
-        id: {
-            types: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
-            primaryKey: true
-        },
+    const Task = sequelize.define('Task', {
         title: {
-            type: DataTypes.STRING,
-            allowNull: false,
-            validate: {
-                len: [3, 100]
-            }
+            types: DataTypes.STRING,
+            allowNUll: false
         },
-        description: {
-            type: DataTypes.TEXT
-        },
+        description: DataTypes.TEXT,
+        assignedUserId: DataTypes.INTEGER,
         dueDate: {
-            type: DataTypes.DATE
+            type: DataTypes.DATE,
+            allowNUll: false
         },
         priority: {
             type: DataTypes.ENUM('low', 'medium', 'high'),
-            defaultValue: 'low'
+            allowNUll: false
         },
         status: {
-            type: DataTypes.ENUM('todo', 'in_progress', 'completed'),
-            defaultValue: 'todo'
-        },
-        projectID: {
-            type: DataTypes.UUID,
+            type: DataTypes.ENUM('pending', 'in-progress', 'completed'),
             allowNull: false,
-            references: {
-                model: 'Users',
-                key: 'id'
-            }
+            defaultValue: 'pending',
         },
-        createdBy: {
-            type: DataTypes.UUID,
-            allowNull: false,
-            references: {
-                model: 'Users',
-                key: 'id'
-            }
-        }
-    }, {
-        sequelize,
-        modelName: 'Task',
-        paranoid: true
     });
 
+    Task.associate = (models) => {
+        Task.belongsTo(models.User, {
+            foreignKey: 'assignedUserId',
+            as: 'assignedUser'
+        });
+    };
+
     return Task;
-};
+}

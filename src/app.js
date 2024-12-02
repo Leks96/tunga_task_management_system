@@ -1,38 +1,32 @@
-require('dotenv').config();
 const express = require('express');
-const helmet = require('helmet');
-const cors = require('cors');
-const compression = require('compression');
+const dotenv = require('dotenv');
 const morgan = require('morgan');
-const { logger } = require('sequelize/lib/utils/logger');
-const { error } = require('winston');
+const logger = require('./utils/logger');
+const authRoutes = require('./routes/auth.routes');
+const projectRoutes = require('./routes/project.routes');
+const taskRoutes = require('./routes/task.routes');
+const errorMiddleware = require('./middleware/error.middleware');
+const { sequelize } = require('./models');
+
+dotenv.config();
 
 const app = express();
 
-// Security handler
-app.use(helmet());
-app.use(cors());
-app.use(compression());
-
-// Request parsing
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 
-// Logging
-app.use(morgan('combined', { stream: logger.stream}));
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
-//API routes
+// Error middleware
+app.use(errorMiddleware);
 
-const apiVersion = process.env.API_VERSION|| 'v1';
-app.use(`/api/${apiVersion}/auth`, authRouter);
-app.use(`/api/${apiVersion}/projects`, projectRouter);
-app.use(`/api/${apiVersion}/tasks`, taskRouter);
-
-// Error Handling
-app.use(errorHandler);
-
-// Server Setup
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => { logger.info(`Server is running on port ${PORT}`)});
 
-module.exports = app;
+sequelize.sync({ force: false }).then(() => {
+  app.listen(PORT, () => {
+    logger.info(`Server running on port ${PORT}`);
+  });
+});

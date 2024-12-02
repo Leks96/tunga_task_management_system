@@ -1,40 +1,23 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
-const ApiError = require('../utils/ApiError');
+const { ROLES } = require('../config/constants');
 
-const auth = async (req, res, next) => {
+const auth = (role) => async (req, res, next) => {
     try {
-        const authHeader = req.headers.authorization;
-        if (!authHeader?.startsWith('Bearer ')) {
-            throw new ApiError(401, 'Please authenticate');
-        }
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ message: 'Unauthorized' });
 
-        const token = authHeader.substring(7);
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
+        req.user = await User.findByPk(decoded.id);
 
-        const user = await User.findByPk(decode.id);
-        if (!user) {
-            throw new ApiError(401, 'Please Authenticate');
+        if (!req.user || (role && req.user.role !== role)) {
+            return res.status(403).json({ message: 'Forbidden' });
         }
 
-        req.user = user;
         next();
     } catch (error) {
-        next(new ApiError (401, 'Please authenticate'));
+        next(error);
     }
 };
 
-const authorize = (...roles) => {
-    return (req, res, next) => {
-        if (!roles.include(req.user.roles)) {
-            throw new ApiError(403, 'Forbidden')
-        }
-        next();
-    };
-};
-
-module.exports = {
-    auth,
-    authorize,
-}
+module.exports = auth;
